@@ -1,0 +1,42 @@
+name: Ppomppu Alert Bot
+
+on:
+  # 5분마다 자동 실행 (GitHub 무료 무제한)
+  schedule:
+    - cron: '*/5 * * * *'
+  # 테스트를 위해 수동 즉시 실행 버튼 활성화
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 라이브러리 설치
+        run: |
+          pip install -r requirements.txt
+
+      - name: 뽐뿌 알리미 실행
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          python bot.py
+
+      - name: 보낸 글 기록(JSON) 자동 저장
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add sent_ppomppu_hot.json || true
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update sent history" && git push)
